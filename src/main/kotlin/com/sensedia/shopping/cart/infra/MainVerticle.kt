@@ -8,11 +8,18 @@ import io.vertx.core.Handler
 import io.vertx.core.http.HttpServerResponse
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
+import io.vertx.ext.healthchecks.HealthCheckHandler
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.ext.web.handler.LoggerHandler
+import io.vertx.kotlin.redis.RedisOptions
+import io.vertx.redis.RedisClient
 import java.util.*
+import com.sun.xml.internal.ws.streaming.XMLStreamReaderUtil.close
+import io.vertx.ext.healthchecks.HealthChecks
+import io.vertx.ext.healthchecks.Status
+
 
 /**
  * @author claudioed on 06/08/18.
@@ -22,6 +29,8 @@ class MainVerticle : AbstractVerticle() {
 
     override fun start(startFuture: Future<Void>) {
         Json.mapper.registerModule(KotlinModule())
+
+
         vertx.deployVerticle(StoreShoppingCartVerticle())
         vertx.deployVerticle(FindShoppingCartVerticle())
         val router = router()
@@ -37,6 +46,22 @@ class MainVerticle : AbstractVerticle() {
     }
 
     private fun router() = Router.router(vertx).apply {
+        val healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx))
+        val config = RedisOptions(host = System.getenv("REDIS_HOST") ?: "127.0.0.1")
+        val redis = RedisClient.create(vertx, config)
+
+        healthCheckHandler.register("redis"
+        ) { future ->
+            redis.get("cart:1") {
+                if (it.failed()) {
+                    future.fail("database connection failed")
+                } else {
+                    future.complete(Status.OK())
+
+                }
+            }
+        }
+        get("/healthcheck").handler(healthCheckHandler)
         route().handler(BodyHandler.create())
         route().handler(LoggerHandler.create())
         post("/carts").handler(newShoppingCart)
@@ -53,11 +78,11 @@ class MainVerticle : AbstractVerticle() {
     private val shoppingCartById = Handler<RoutingContext> { req ->
         val id = req.pathParam("id")
         vertx.eventBus().send<String>("shopping.cart.find.id", JsonObject().put("id", id)) {
-            if(it.failed()){
-                val error = JsonObject().put("error",it.cause().message)
+            if (it.failed()) {
+                val error = JsonObject().put("error", it.cause().message)
                 req.response().setStatusCode(404).endWithJson(error)
-            }else{
-                val cart = Json.decodeValue(it.result().body(),ShoppingCart::class.java)
+            } else {
+                val cart = Json.decodeValue(it.result().body(), ShoppingCart::class.java)
                 req.response().endWithJson(cart)
             }
         }
