@@ -16,10 +16,10 @@ class StoreShoppingCartVerticle : AbstractVerticle() {
     override fun start(startFuture: Future<Void>) {
         val config = RedisOptions(host = "127.0.0.1")
         val redis = RedisClient.create(vertx, config)
-        val consumer  = vertx.eventBus().consumer<ShoppingCart>("shopping.cart.new")
-        consumer.handler {
+        val consumer  = vertx.eventBus().consumer<String>("shopping.cart.new")
+        consumer.handler { it ->
             val message  = it
-            val cart = it.body()
+            val cart = Json.decodeValue(it.body(),ShoppingCart::class.java)
             redis.set("cart:${cart.id}",Json.encode(cart)) {
                 message.reply(Json.encode(cart))
             }

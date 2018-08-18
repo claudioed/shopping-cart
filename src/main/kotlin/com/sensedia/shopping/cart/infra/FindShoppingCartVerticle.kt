@@ -23,8 +23,16 @@ class FindShoppingCartVerticle : AbstractVerticle() {
             val message  = it
             val id = it.body().get<String>("id")
             redis.get("cart:$id") {
+                if(it.failed()){
+                    message.fail(500,"error on database connection")
+                    return@get
+                }
+                if(it.result().isNullOrBlank()){
+                    message.fail(404,"cart not found")
+                    return@get
+                }
                 val cart = Json.decodeValue(it.result(),ShoppingCart::class.java)
-                message.reply(cart)
+                message.reply(Json.encode(cart))
             }
         }
     }
