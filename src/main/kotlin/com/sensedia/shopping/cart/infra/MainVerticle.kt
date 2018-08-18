@@ -9,6 +9,8 @@ import io.vertx.core.http.HttpServerResponse
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.healthchecks.HealthCheckHandler
+import io.vertx.ext.healthchecks.HealthChecks
+import io.vertx.ext.healthchecks.Status
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
@@ -16,9 +18,6 @@ import io.vertx.ext.web.handler.LoggerHandler
 import io.vertx.kotlin.redis.RedisOptions
 import io.vertx.redis.RedisClient
 import java.util.*
-import com.sun.xml.internal.ws.streaming.XMLStreamReaderUtil.close
-import io.vertx.ext.healthchecks.HealthChecks
-import io.vertx.ext.healthchecks.Status
 
 
 /**

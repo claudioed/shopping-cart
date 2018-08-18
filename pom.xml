@@ -140,7 +140,7 @@
         <configuration>
           <resources>
             <env>
-              <REDIS_HOST>redis</REDIS_HOST>
+              <REDIS_HOST>redis-master</REDIS_HOST>
             </env>
             <labels>
               <deployment>
