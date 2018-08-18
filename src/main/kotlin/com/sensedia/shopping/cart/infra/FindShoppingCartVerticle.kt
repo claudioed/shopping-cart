@@ -16,7 +16,7 @@ import io.vertx.redis.RedisClient
 class FindShoppingCartVerticle : AbstractVerticle() {
 
     override fun start(startFuture: Future<Void>) {
-        val config = RedisOptions(host = "127.0.0.1")
+        val config = RedisOptions(host = System.getenv("REDIS_HOST") ?: "127.0.0.1")
         val redis = RedisClient.create(vertx, config)
         val consumer  = vertx.eventBus().consumer<JsonObject>("shopping.cart.find.id")
         consumer.handler {
