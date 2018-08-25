@@ -22,6 +22,7 @@ class StoreShoppingCartVerticle : AbstractVerticle() {
             val cart = Json.decodeValue(it.body(),ShoppingCart::class.java)
             redis.set("cart:${cart.id}",Json.encode(cart)) {
                 message.reply(Json.encode(cart))
+                vertx.eventBus().send("shopping.cart.new.analytics",Json.encode(cart))
             }
         }
     }
