@@ -5,6 +5,7 @@ import com.sensedia.shopping.cart.domain.ShoppingCart
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Future
 import io.vertx.core.Handler
+import io.vertx.core.http.HttpServerRequest
 import io.vertx.core.http.HttpServerResponse
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
@@ -15,6 +16,7 @@ import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
 import io.vertx.ext.web.handler.LoggerHandler
+import io.vertx.kotlin.core.eventbus.DeliveryOptions
 import io.vertx.kotlin.redis.RedisOptions
 import io.vertx.redis.RedisClient
 import java.util.*
@@ -70,7 +72,7 @@ class MainVerticle : AbstractVerticle() {
     private val newShoppingCart = Handler<RoutingContext> { req ->
         val cart = Json.decodeValue(req.bodyAsString, ShoppingCart::class.java)
         val shoppingCart = cart.copy(id = UUID.randomUUID().toString())
-        vertx.eventBus().publish("shopping.cart.new", Json.encode(shoppingCart))
+        vertx.eventBus().publish("shopping.cart.new", Json.encode(shoppingCart),DeliveryOptions(headers = traceHeaders(req.request())))
         req.response().created(shoppingCart)
     }
 
@@ -85,6 +87,11 @@ class MainVerticle : AbstractVerticle() {
                 req.response().endWithJson(cart)
             }
         }
+    }
+
+    private fun traceHeaders(req: HttpServerRequest): Map<String, String> {
+        return listOf("x-request-id", "x-b3-traceid", "x-b3-spanid", "x-b3-parentspanid", "x-b3-parentspanid", "x-b3-flags", "x-ot-span-context")
+                .map { it to req.getHeader(it) }.toMap()
     }
 
     private fun HttpServerResponse.endWithJson(obj: Any) {
