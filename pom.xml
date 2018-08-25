@@ -141,6 +141,7 @@
           <resources>
             <env>
               <REDIS_HOST>redis-master</REDIS_HOST>
+              <ANALYTICS_HOST>http://analytics:8081/analytics</ANALYTICS_HOST>
             </env>
             <labels>
               <deployment>
@@ -154,6 +155,14 @@
                 </property>
               </deployment>
             </labels>
+            <annotations>
+              <deployment>
+                <property>
+                  <name>sidecar.istio.io/inject</name>
+                  <value>true</value>
+                </property>
+              </deployment>
+            </annotations>
           </resources>
           <images>
             <image>
