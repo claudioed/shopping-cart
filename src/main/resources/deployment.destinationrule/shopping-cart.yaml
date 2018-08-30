@@ -1,15 +1,10 @@
 apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
+kind: DestinationRule
 metadata:
-  name: "shopping-cart-route-default"
-  namespace: apps
+  name: "shopping-cart"
 spec:
-  hosts:
-  - "shopping-cart"
-  gateways:
-  - "ecommerce-gateway"
-  http:
-  - route:
-    - destination:
-        host: "shopping-cart"
-        subset: v1
+  host: "shopping-cart"
+  subsets:
+  - name: v1
+    labels:
+      version: v1
