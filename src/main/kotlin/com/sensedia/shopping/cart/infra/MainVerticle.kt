@@ -61,7 +61,7 @@ class MainVerticle : AbstractVerticle() {
                 }
             }
         }
-        get("/healthcheck").handler(healthCheckHandler)
+        get("/carts/healthcheck").handler(healthCheckHandler)
         route().handler(BodyHandler.create())
         route().handler(LoggerHandler.create())
         post("/carts").handler(newShoppingCart)

@@ -1,0 +1,18 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: "ecommerce-service"
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - "ecommerce-gateway"
+  http:
+  - match:
+    - uri:
+        prefix: /carts
+    route:
+    - destination:
+        host: "shopping-cart"
+        port:
+          number: 8080
