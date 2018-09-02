@@ -9,6 +9,7 @@ import io.vertx.core.http.HttpServerRequest
 import io.vertx.core.http.HttpServerResponse
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
+import io.vertx.core.logging.LoggerFactory
 import io.vertx.ext.healthchecks.HealthCheckHandler
 import io.vertx.ext.healthchecks.HealthChecks
 import io.vertx.ext.healthchecks.Status
@@ -27,6 +28,8 @@ import java.util.*
  * Project shopping-cart
  */
 class MainVerticle : AbstractVerticle() {
+
+    private val LOGGER = LoggerFactory.getLogger(MainVerticle::class.java)
 
     override fun start(startFuture: Future<Void>) {
         Json.mapper.registerModule(KotlinModule())
@@ -47,6 +50,7 @@ class MainVerticle : AbstractVerticle() {
 
     private fun router() = Router.router(vertx).apply {
         val healthCheckHandler = HealthCheckHandler.createWithHealthChecks(HealthChecks.create(vertx))
+        LOGGER.info("Redis Host : ${System.getenv("REDIS_HOST")} ")
         val config = RedisOptions(host = System.getenv("REDIS_HOST") ?: "127.0.0.1")
         val redis = RedisClient.create(vertx, config)
 
@@ -54,10 +58,10 @@ class MainVerticle : AbstractVerticle() {
         ) { future ->
             redis.get("cart:1") {
                 if (it.failed()) {
+                    LOGGER.error(it.cause().message)
                     future.fail("database connection failed")
                 } else {
                     future.complete(Status.OK())
-
                 }
             }
         }

@@ -140,7 +140,7 @@
         <configuration>
           <resources>
             <env>
-              <REDIS_HOST>redis-master</REDIS_HOST>
+              <REDIS_HOST>redis-master.ecommerce.svc.cluster.local</REDIS_HOST>
               <ANALYTICS_HOST>http://analytics:8081/analytics</ANALYTICS_HOST>
             </env>
             <labels>
