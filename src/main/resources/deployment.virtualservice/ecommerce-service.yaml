@@ -16,3 +16,11 @@ spec:
         host: "shopping-cart"
         port:
           number: 8080
+  - match:
+    - uri:
+        prefix: /analytics
+    route:
+    - destination:
+        host: "shopping-cart-analytics"
+        port:
+          number: 8081

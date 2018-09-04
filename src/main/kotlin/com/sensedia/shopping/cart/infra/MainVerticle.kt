@@ -93,10 +93,14 @@ class MainVerticle : AbstractVerticle() {
     }
 
     private fun traceHeaders(req: HttpServerRequest): Map<String, String> {
-        if(!req.headers().contains("x-request-id")){
+        if(!req.headers().contains("x-request-id") || !req.headers().contains("x-b3-traceid")
+                || !req.headers().contains("x-b3-spanid") || !req.headers().contains("x-b3-parentspanid") ||
+                !req.headers().contains("x-b3-flags") || !req.headers().contains("x-ot-span-context") ){
+            LOGGER.error("Some OpenTracing headers are missing")
             return mapOf()
         }
-        return listOf("x-request-id", "x-b3-traceid", "x-b3-spanid", "x-b3-parentspanid", "x-b3-parentspanid", "x-b3-flags", "x-ot-span-context")
+        LOGGER.info("OpenTracing headers are fully configured")
+        return listOf("x-request-id", "x-b3-traceid", "x-b3-spanid", "x-b3-parentspanid", "x-b3-flags", "x-ot-span-context")
                 .map { it to req.getHeader(it) }.toMap()
     }
 
