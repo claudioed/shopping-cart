@@ -4,6 +4,7 @@ import io.vertx.core.AbstractVerticle
 import io.vertx.core.Future
 import io.vertx.core.MultiMap
 import io.vertx.core.http.HttpClientRequest
+import io.vertx.core.logging.LoggerFactory
 
 /**
  * @author claudioed on 06/08/18.
@@ -11,14 +12,17 @@ import io.vertx.core.http.HttpClientRequest
  */
 class RegisterShoppingCartAnalyticsVerticle : AbstractVerticle() {
 
+    private val LOGGER = LoggerFactory.getLogger(RegisterShoppingCartAnalyticsVerticle::class.java)
+
     override fun start(startFuture: Future<Void>) {
         val analyticsHost = System.getenv("ANALYTICS_HOST") ?: "127.0.0.1"
         val httpClient = vertx.createHttpClient()
         val consumer = vertx.eventBus().consumer<String>("shopping.cart.new.analytics")
         consumer.handler { it ->
+            LOGGER.info(" New shopping cart analytics data...")
+            LOGGER.info(" Message Headers ${it.headers()}")
             httpClient.postAbs(analyticsHost) {
-                it.statusCode()
-
+                LOGGER.info("Status Code ${it.statusCode()}")
             }.putHeader("Content-Length",it.body().length.toString())
               .write(it.body(),"utf8")
               .openTracingHeaders(it.headers())
@@ -27,6 +31,7 @@ class RegisterShoppingCartAnalyticsVerticle : AbstractVerticle() {
 
     private fun HttpClientRequest.openTracingHeaders(tracingHeaders: MultiMap) {
         tracingHeaders.forEach {
+            LOGGER.info( "key ${it.key} value ${it.value}")
             this.putHeader(it.key,it.value)
         }
     }

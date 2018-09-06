@@ -4,6 +4,7 @@ import com.sensedia.shopping.cart.domain.ShoppingCart
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Future
 import io.vertx.core.json.Json
+import io.vertx.kotlin.core.eventbus.DeliveryOptions
 import io.vertx.kotlin.redis.RedisOptions
 import io.vertx.redis.RedisClient
 
@@ -22,7 +23,7 @@ class StoreShoppingCartVerticle : AbstractVerticle() {
             val cart = Json.decodeValue(it.body(),ShoppingCart::class.java)
             redis.set("cart:${cart.id}",Json.encode(cart)) {
                 message.reply(Json.encode(cart))
-                vertx.eventBus().send("shopping.cart.new.analytics",Json.encode(cart))
+                vertx.eventBus().send("shopping.cart.new.analytics",Json.encode(cart),DeliveryOptions(headers = message.headers().map { it.key to it.value }.toMap()))
             }
         }
     }

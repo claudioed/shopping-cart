@@ -21,6 +21,9 @@ import io.vertx.kotlin.core.eventbus.DeliveryOptions
 import io.vertx.kotlin.redis.RedisOptions
 import io.vertx.redis.RedisClient
 import java.util.*
+import io.vertx.core.DeploymentOptions
+
+
 
 
 /**
@@ -33,9 +36,9 @@ class MainVerticle : AbstractVerticle() {
 
     override fun start(startFuture: Future<Void>) {
         Json.mapper.registerModule(KotlinModule())
-        vertx.deployVerticle(StoreShoppingCartVerticle())
-        vertx.deployVerticle(FindShoppingCartVerticle())
-        vertx.deployVerticle(RegisterShoppingCartAnalyticsVerticle())
+        vertx.deployVerticle(StoreShoppingCartVerticle(), DeploymentOptions().setWorker(true))
+        vertx.deployVerticle(FindShoppingCartVerticle(),DeploymentOptions().setWorker(true))
+        vertx.deployVerticle(RegisterShoppingCartAnalyticsVerticle(),DeploymentOptions().setWorker(true))
         val router = router()
         vertx.createHttpServer()
                 .requestHandler { router.accept(it) }
@@ -75,6 +78,7 @@ class MainVerticle : AbstractVerticle() {
     private val newShoppingCart = Handler<RoutingContext> { req ->
         val cart = Json.decodeValue(req.bodyAsString, ShoppingCart::class.java)
         val shoppingCart = cart.copy(id = UUID.randomUUID().toString())
+        LOGGER.info("Req Headers ${traceHeaders(req.request())}")
         vertx.eventBus().send("shopping.cart.new", Json.encode(shoppingCart),DeliveryOptions(headers = traceHeaders(req.request())))
         req.response().created(shoppingCart)
     }
@@ -93,15 +97,13 @@ class MainVerticle : AbstractVerticle() {
     }
 
     private fun traceHeaders(req: HttpServerRequest): Map<String, String> {
-        if(!req.headers().contains("x-request-id") || !req.headers().contains("x-b3-traceid")
-                || !req.headers().contains("x-b3-spanid") || !req.headers().contains("x-b3-parentspanid") ||
-                !req.headers().contains("x-b3-flags") || !req.headers().contains("x-ot-span-context") ){
-            LOGGER.error("Some OpenTracing headers are missing")
-            return mapOf()
+        if(req.headers().contains("x-request-id")){
+            LOGGER.info("OpenTracing headers are fully configured")
+            return listOf("x-request-id", "x-b3-traceid", "x-b3-spanid", "x-b3-parentspanid", "x-b3-sampled","x-b3-flags", "x-ot-span-context")
+                    .filter { req.getHeader(it) != null }
+                    .map { it to req.getHeader(it)}.toMap()
         }
-        LOGGER.info("OpenTracing headers are fully configured")
-        return listOf("x-request-id", "x-b3-traceid", "x-b3-spanid", "x-b3-parentspanid", "x-b3-flags", "x-ot-span-context")
-                .map { it to req.getHeader(it) }.toMap()
+        return mapOf()
     }
 
     private fun HttpServerResponse.endWithJson(obj: Any) {
