@@ -23,17 +23,17 @@ class RegisterShoppingCartAnalyticsVerticle : AbstractVerticle() {
             LOGGER.info(" Message Headers ${it.headers()}")
             httpClient.postAbs(analyticsHost) {
                 LOGGER.info("Status Code ${it.statusCode()}")
-            }.putHeader("Content-Length",it.body().length.toString())
-              .write(it.body(),"utf8")
-              .openTracingHeaders(it.headers())
+            }.putHeader("Content-Length",it.body().length.toString()).openTracingHeaders(it.headers())
+              .end(it.body(),"utf8")
         }
     }
 
-    private fun HttpClientRequest.openTracingHeaders(tracingHeaders: MultiMap) {
+    private fun HttpClientRequest.openTracingHeaders(tracingHeaders: MultiMap): HttpClientRequest{
         tracingHeaders.forEach {
             LOGGER.info( "key ${it.key} value ${it.value}")
             this.putHeader(it.key,it.value)
         }
+        return this
     }
 
 }
