@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: "ecommerce-service"
+  name: "ecommerce-service-carts"
 spec:
   hosts:
   - "*"
@@ -14,13 +14,22 @@ spec:
     route:
     - destination:
         host: "shopping-cart"
-        port:
-          number: 8080
+        subset: v1
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: "ecommerce-service-analytics"
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - "ecommerce-gateway"
+  http:
   - match:
     - uri:
         prefix: /analytics
     route:
     - destination:
         host: "shopping-cart-analytics"
-        port:
-          number: 8081
+        subset: v1
